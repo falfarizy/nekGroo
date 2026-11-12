@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import Form from "./_components/formKucing"
 import CardsLayout from "./_components/cardLayout"
 import Step from "./_components/step"
-import { SERVICES, CatForm } from "./_components/listServices"
+import { SERVICES, CatForm, CustomerForm } from "./_components/listServices"
 import FormCust from "./_components/formCust"
 
 export default function Appointment() {
@@ -79,6 +79,10 @@ export default function Appointment() {
     // semua form harus terisi dulu sebelum bisa kirim data
     const isAllFormsComplete = formList.length > 0 && formList.every(isFormComplete)
 
+
+    const [catFormData, setCatFormData] = useState<CatForm[]>()
+
+    // Form submit
     const handleFinalSubmit = (e:React.FormEvent) => {
         e.preventDefault()
         const incompleteFormIndex = formList.findIndex((f) => !isFormComplete(f))
@@ -92,17 +96,31 @@ export default function Appointment() {
             return;
         }
 
-        console.log("Submit All Forms Data:", formList);
-        alert("Data berhasil dikirim!");
+        // console.log("Submit All Forms Data:", formList);
+        setCatFormData(formList)
+        // alert("Data berhasil dikirim!");
         setPage(3)
 
     }
 
+    // Customer
+    const [customer, setCustomer] = useState<CustomerForm>({
+        name: "",
+        phone: "",
+        alamat: "",
+    })
+    const handleCustomerChange = (data: CustomerForm) => setCustomer(data)
+
+    const isFormCustomerCompleted = customer.name.trim() !== "" && customer.phone !== "" && customer.alamat.trim() !== ""
+
+
     return (
-        <div>
+        <div className="bg-[#E4E5DA]">
             <Step 
                 page = {page}
             />
+
+            {/* Pilih Card */}
             {page===1 &&
             (
                 <div className="h-fit px-6 py-8 bg-[#E4E5DA] flex flex-col gap-6">
@@ -120,6 +138,8 @@ export default function Appointment() {
                     </button>
                 </div>
             )}
+
+            {/* Isi Form Kucing */}
             {page==2 &&
             (
                 <div className="h-fit px-6 py-8 bg-[#E4E5DA] flex flex-col gap-6">
@@ -168,10 +188,25 @@ export default function Appointment() {
                     </button>
                 </div>
             )}
+
+            {/* Isi data customer */}
             {page == 3 &&
             (
-                <FormCust/>
+                <div className="flex flex-col px-6 py-8 gap-4">
+                    <form action=""
+                        className="">
+                        <FormCust
+                            formData={customer}
+                            onChange={handleCustomerChange}
+                        />
+                    </form>
+                    <button onClick={() => setPage(4)} className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900">
+                        Next
+                    </button>
+                </div>
             )}
+
+            {/* Pilih Jadwal */}
         </div>
     )
 }

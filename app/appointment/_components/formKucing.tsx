@@ -1,8 +1,7 @@
 "use client"
 import { useState } from "react"
-import InputForm from "./inputForm"
+import InputForm, { FormChangeEvent } from "./inputForm"
 import { Services, CatForm } from "./listServices"
-import { OptionItems } from "./inputForm"
 
 
 interface formProps  {
@@ -21,7 +20,7 @@ export default function Form({
 }:formProps) {
 
     // Perubahan input
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: FormChangeEvent) => {
         const {name, value} = e.target
         onChange(formIndex, {
             ...formData,
@@ -39,7 +38,7 @@ export default function Form({
 
     const serviceOption = availableOption.map((item) => ({
         value: item.id,
-        label: `${item.paket} (${item.harga})`
+        label: item.paket
     }))
 
     return (
