@@ -23,6 +23,12 @@ export interface CatForm {
     selectedServiceId: string;
 }
 
+export interface CustomerForm {
+    name: string,
+    phone: string,
+    alamat: string,
+}
+
 export const SERVICES: Services[] = [
     {
         id:"daily",
