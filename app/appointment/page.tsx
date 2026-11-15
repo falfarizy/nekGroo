@@ -1,10 +1,11 @@
 "use client"
 import { useEffect, useState } from "react"
-import Form from "./_components/formKucing"
+import Form from "./_components/formK/formKucing"
 import CardsLayout from "./_components/cardLayout"
 import Step from "./_components/step"
-import { SERVICES, CatForm, CustomerForm } from "./_components/listServices"
-import FormCust from "./_components/formCust"
+import { SERVICES, CatForm, CustomerForm } from "./_components/formK/listServices"
+import FormCust from "./_components/formK/formCust"
+import Schedule from "./_components/jadwal/schedule"
 
 export default function Appointment() {
     // Page navigation
@@ -56,7 +57,7 @@ export default function Appointment() {
         }))
 
         setFormList(initialForms)
-        setPage(2)
+        setPage(3)
     }
 
     const handleFormChange = (index:number, updatedData: CatForm) => {
@@ -99,7 +100,7 @@ export default function Appointment() {
         // console.log("Submit All Forms Data:", formList);
         setCatFormData(formList)
         // alert("Data berhasil dikirim!");
-        setPage(3)
+        setPage(4)
 
     }
 
@@ -113,6 +114,23 @@ export default function Appointment() {
 
     const isFormCustomerCompleted = customer.name.trim() !== "" && customer.phone !== "" && customer.alamat.trim() !== ""
 
+    // Jadwal
+    const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
+    const handleConfirmSchedule = () => {
+        if (!selectedDate) {
+            alert("Harap pilih tanggal terlebih dahulu!");
+            return;
+        }
+
+        console.log("Data appointment:", {
+            customer,
+            cats: catFormData ?? formList,
+            date: selectedDate,
+        });
+        alert(`Jadwal berhasil dipilih: ${selectedDate}`);
+    }
+
 
     return (
         <div className="bg-[#E4E5DA]">
@@ -120,8 +138,34 @@ export default function Appointment() {
                 page = {page}
             />
 
+            {/* Pilih Jadwal */}
+            {page == 1 &&
+            (
+                <div className="h-fit px-6 py-8 bg-[#E4E5DA] flex flex-col gap-6">
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-black font-fraunces text-[30px] text-center">Pilih Jadwal</h1>
+                        <p className="font-dmsans text-[14px] text-[#737A70] text-center leading-6">
+                            Pilih tanggal kedatangan si meong. Tanggal yang sudah penuh tidak dapat dipilih.
+                        </p>
+                    </div>
+
+                    <Schedule
+                        value={selectedDate}
+                        onChange={setSelectedDate}
+                    />
+
+                    <button
+                        onClick={() => {handleConfirmSchedule;setPage(2);console.log(selectedDate)}}
+                        disabled={!selectedDate}
+                        className="bg-green-800 hover:bg-green-900 h-[50] rounded-[20px] disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+                    >
+                        Konfirmasi Jadwal
+                    </button>
+                </div>
+            )}
+
             {/* Pilih Card */}
-            {page===1 &&
+            {page===2 &&
             (
                 <div className="h-fit px-6 py-8 bg-[#E4E5DA] flex flex-col gap-6">
                     <div className="flex flex-col gap-4 mb-4">
@@ -140,7 +184,7 @@ export default function Appointment() {
             )}
 
             {/* Isi Form Kucing */}
-            {page==2 &&
+            {page==3 &&
             (
                 <div className="h-fit px-6 py-8 bg-[#E4E5DA] flex flex-col gap-6">
                     <h1 className="text-black font-fraunces text-[30px] text-center">Tentang Si Meong</h1>
@@ -183,14 +227,14 @@ export default function Appointment() {
                             Kirim Data
                         </button>
                     </form>
-                    <button onClick={() => setPage(1)} className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900">
+                    <button onClick={() => setPage(2)} className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900">
                         Previous
                     </button>
                 </div>
             )}
 
             {/* Isi data customer */}
-            {page == 3 &&
+            {page == 4 &&
             (
                 <div className="flex flex-col px-6 py-8 gap-4">
                     <form action=""
@@ -200,13 +244,15 @@ export default function Appointment() {
                             onChange={handleCustomerChange}
                         />
                     </form>
-                    <button onClick={() => setPage(4)} className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900">
+                    <button
+                        onClick={() => setPage(5)}
+                        disabled={!isFormCustomerCompleted}
+                        className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+                    >
                         Next
                     </button>
                 </div>
             )}
-
-            {/* Pilih Jadwal */}
         </div>
     )
 }

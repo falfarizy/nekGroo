@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import CheckIcon from "../../components/icons/checkIcon"
 import PlusIcon from "@/app/components/icons/plusIcon"
 import MinusIcon from "@/app/components/icons/minusIcon"
-import { hargaKitten } from "./listServices"
+import { hargaKitten } from "./formK/listServices"
 
 
 interface CardProps {

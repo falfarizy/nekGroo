@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import Card from "./card"
-import { SERVICES } from "./listServices"
+import { SERVICES } from "./formK/listServices"
 
 
 interface CardsLayoutProps {
