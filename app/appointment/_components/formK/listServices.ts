@@ -8,10 +8,14 @@ export interface Services {
 // Harga kitten lebih murah Rp 5.000 dari harga adult
 export const POTONGAN_HARGA_KITTEN = 5000
 
+// Ubah label harga ("Rp 40.000") jadi angka (40000) supaya bisa dijumlahkan.
+export function hargaAngka(harga: string): number {
+    return Number(harga.replace(/[^\d]/g, ""))
+}
+
 // Hitung harga kitten dari harga adult (contoh: "Rp 40.000" -> "Rp 35.000")
 export function hargaKitten(hargaAdult: string): string {
-    const angkaAdult = Number(hargaAdult.replace(/[^\d]/g, ""))
-    const angkaKitten = Math.max(0, angkaAdult - POTONGAN_HARGA_KITTEN)
+    const angkaKitten = Math.max(0, hargaAngka(hargaAdult) - POTONGAN_HARGA_KITTEN)
     return `Rp ${angkaKitten.toLocaleString("id-ID")}`
 }
 
