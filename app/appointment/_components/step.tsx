@@ -1,10 +1,17 @@
 "use client"
-import { useState } from "react"
 
 export default function Step({page}:{page:number}) {
-    const next = "Berikutnya: Data diri kucing"
+    const totalStep = 6
+    const labels = [
+        "Pilih Jadwal",
+        "Pilih Layanan",
+        "Data Kucing",
+        "Data Diri",
+        "Jasa Titip",
+        "Konfirmasi",
+    ]
 
-    const totalStep = 5
+    const next = page >= totalStep ? "Selesai" : `Berikutnya: ${labels[page] ?? ""}`
 
     return (
         <div className="w-full h-[103] bg-white px-6 py-5">
@@ -15,7 +22,7 @@ export default function Step({page}:{page:number}) {
                         const isActive = step <= page
 
                         return (
-                            <li key={step} className={`w-[51] h-[32] rounded-full ${isActive? "bg-green-800 text-white" : "bg-gray-100 text-gray-700"} content-center text-center`}>{step}</li>
+                            <li key={step} className={`w-[40] h-[32] rounded-full ${isActive? "bg-green-800 text-white" : "bg-gray-100 text-gray-700"} content-center text-center`}>{step}</li>
                         )
                     }) }
                 </ul>

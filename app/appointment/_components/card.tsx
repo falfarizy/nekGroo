@@ -12,6 +12,7 @@ interface CardProps {
     harga:string,
     layanan:string[],
     jumlah: number,
+    canAdd: boolean,
     onQuantityChange: (id:string, delta: number) => void,
     onToggleSelect: (id:string) => void
 }
@@ -22,18 +23,21 @@ export default function Card({
     harga,
     layanan,
     jumlah,
+    canAdd,
     onQuantityChange,
     onToggleSelect
 }:CardProps) {
 
     const isSelected = jumlah > 0
+    const isBlocked = !isSelected && !canAdd
 
     return (
         <div 
             onClick={() => {
-                onToggleSelect(id)
+                if (!isBlocked) onToggleSelect(id)
             }} 
-            className={`flex flex-col justify-between h-[368] rounded-[18] px-6 py-8 text-black border-2 ${isSelected ? "border-green-800 bg-[#EDF3E8]" : "border-gray-300 bg-white"}`}>
+            aria-disabled={isBlocked}
+            className={`flex flex-col justify-between h-[368] rounded-[18] px-6 py-8 text-black border-2 ${isSelected ? "border-green-800 bg-[#EDF3E8]" : "border-gray-300 bg-white"} ${isBlocked ? "cursor-not-allowed opacity-60" : ""}`}>
             <h1 className="text-[25px] text-black font-fraunces">{paket}</h1>
             <div className="flex flex-col gap-1">
                 <span className="text-[13px] font-dmsans text-gray-500">Adult</span>
@@ -55,7 +59,7 @@ export default function Card({
                     <MinusIcon/>
                 </button>
                 <span>{jumlah}</span>
-                <button onClick={(e) => {e.stopPropagation(); onQuantityChange(id, 1)}} disabled={!isSelected}>
+                <button onClick={(e) => {e.stopPropagation(); onQuantityChange(id, 1)}} disabled={!isSelected || !canAdd}>
                     <PlusIcon/>
                 </button>
             </div>

@@ -6,6 +6,24 @@ import Step from "./_components/step"
 import { SERVICES, CatForm, CustomerForm } from "./_components/formK/listServices"
 import FormCust from "./_components/formK/formCust"
 import Schedule from "./_components/jadwal/schedule"
+import { formatLongDate, getAvailableSlots } from "./_components/jadwal/calendar/utils"
+import BarangLayout from "./_components/jastip/barangLayout"
+import ConfirmAkhir from "./_components/confirmAkhir/page"
+import { buatRingkasan, DAFTAR_BARANG } from "./_components/jastip/_components/listBarang"
+
+// Kurangi jumlah layanan dari urutan terakhir jika tanggal baru punya lebih sedikit slot.
+function clampQuantities(quantities: Record<string, number>, max: number): Record<string, number> {
+    let sisa = max
+    const result: Record<string, number> = {}
+
+    for (const [id, qty] of Object.entries(quantities)) {
+        const next = Math.min(Math.max(0, qty), sisa)
+        result[id] = next
+        sisa -= next
+    }
+
+    return result
+}
 
 export default function Appointment() {
     // Page navigation
@@ -16,16 +34,35 @@ export default function Appointment() {
     const [formList, setFormList] = useState<CatForm[]>([]) 
     //persetujuan syarat sebelum kirim data
     const [isAgreed, setIsAgreed] = useState(false)
+    // Jadwal
+    const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
+    // Kuota layanan mengikuti sisa slot pada tanggal yang dipilih
+    const availableSlots = selectedDate ? getAvailableSlots(selectedDate) : 0
+    const totalSelected = Object.values(quantity).reduce((acc, q) => acc + q, 0)
+    const remainingSlots = Math.max(0, availableSlots - totalSelected)
 
     useEffect(() => {
         window.scrollTo({top:0, behavior:"smooth"})
     },[page])
+
+    // Ganti tanggal: sesuaikan lagi jumlah layanan jika slotnya lebih sedikit
+    const handleDateChange = (date:string) => {
+        setSelectedDate(date)
+        setQuantity((prev) => clampQuantities(prev, getAvailableSlots(date)))
+    }
 
     // handler jumlah layanan (+ -)
     const handleQuantityChange = (id:string, nilaiPerubahan:number) => {
         setQuantity((prev) => {
             const current = prev[id] || 0
             const next = Math.max(0, current + nilaiPerubahan)
+
+            if (nilaiPerubahan > 0) {
+                const total = Object.values(prev).reduce((acc, q) => acc + q, 0)
+                if (total >= availableSlots) return prev
+            }
+
             return {...prev, [id]:next}
         })
     }
@@ -34,21 +71,25 @@ export default function Appointment() {
     const handleToggleSelect = (id:string) => {
         setQuantity((prev) => {
             const current =  prev[id] || 0
+            if (current > 0) return {...prev, [id]:0}
+
+            const total = Object.values(prev).reduce((acc, q) => acc + q, 0)
+            if (total >= availableSlots) return prev
+
             return {
                 ...prev,
-                [id]: current>0?0:1
+                [id]: 1
             }
         })
     }
 
     // tampilkan form sesuai jumlah layanan dipilih
     const handleNextToPageTwo = () => {
-        const totalForm = Object.values(quantity).reduce((acc, q) => acc + q, 0)
-        if (totalForm === 0) {
+        if (totalSelected === 0 || totalSelected > availableSlots) {
             return
         }
 
-        const initialForms: CatForm[] = Array.from({length:totalForm}, () => ({
+        const initialForms: CatForm[] = Array.from({length:totalSelected}, () => ({
             name: "",
             ras: "",
             age: "",
@@ -114,8 +155,27 @@ export default function Appointment() {
 
     const isFormCustomerCompleted = customer.name.trim() !== "" && customer.phone !== "" && customer.alamat.trim() !== ""
 
-    // Jadwal
-    const [selectedDate, setSelectedDate] = useState<string | null>(null)
+    // Jasa titip
+    const [jastipQuantities, setJastipQuantities] = useState<Record<string, number>>({})
+    const ringkasanJastip = buatRingkasan(jastipQuantities)
+
+    const handleJastipQuantityChange = (id:string, delta:number) => {
+        setJastipQuantities((prev) => {
+            const current = prev[id] || 0
+            const stok = DAFTAR_BARANG.find((barang) => barang.id === id)?.stok ?? 0
+            const next = Math.min(stok, Math.max(0, current + delta))
+            return {...prev, [id]:next}
+        })
+    }
+
+    const handleJastipToggle = (id:string) => {
+        setJastipQuantities((prev) => {
+            const current = prev[id] || 0
+            const stok = DAFTAR_BARANG.find((barang) => barang.id === id)?.stok ?? 0
+            if (stok === 0) return prev
+            return {...prev, [id]: current > 0 ? 0 : 1}
+        })
+    }
 
     const handleConfirmSchedule = () => {
         if (!selectedDate) {
@@ -151,7 +211,7 @@ export default function Appointment() {
 
                     <Schedule
                         value={selectedDate}
-                        onChange={setSelectedDate}
+                        onChange={handleDateChange}
                     />
 
                     <button
@@ -171,9 +231,19 @@ export default function Appointment() {
                     <div className="flex flex-col gap-4 mb-4">
                         <h1 className="font-fraunces text-[#233D31] text-[32px] leading-10">Perawatan yang pas untuk si meong.</h1>
                         <p className="font-dmsans text-[14px] text-[#737A70] leading-6">Pilih paket grooming untuk si meong. Setiap sesi ditangani dengan sabar oleh groomer khusus kucing.</p>
+                        <p className="font-dmsans text-[13px] text-[#233D31]">
+                            {selectedDate
+                                ? `Slot ${formatLongDate(selectedDate)}: ${totalSelected}/${availableSlots} dipilih. ${
+                                    remainingSlots > 0
+                                        ? `Sisa ${remainingSlots} slot.`
+                                        : "Semua slot sudah terpakai."
+                                }`
+                                : "Pilih tanggal terlebih dahulu."}
+                        </p>
                     </div>
                     <CardsLayout
                         quantities={quantity}
+                        canAdd={remainingSlots > 0}
                         onQuantityChange={handleQuantityChange}
                         onToggleSelect={handleToggleSelect}
                     />
@@ -252,6 +322,51 @@ export default function Appointment() {
                         Next
                     </button>
                 </div>
+            )}
+
+            {/* Jasa titip */}
+            {page === 5 && (
+                <>
+                    <BarangLayout
+                        quantities={jastipQuantities}
+                        onQuantityChange={handleJastipQuantityChange}
+                        onToggleSelect={handleJastipToggle}
+                    />
+                    <div className="flex flex-col gap-3 px-6 pb-44">
+                        <button
+                            onClick={() => setPage(6)}
+                            className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900"
+                        >
+                            Lanjut Konfirmasi
+                        </button>
+                        <button
+                            onClick={() => setPage(4)}
+                            className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900"
+                        >
+                            Previous
+                        </button>
+                    </div>
+                </>
+            )}
+
+            {/* Konfirmasi akhir */}
+            {page === 6 && (
+                <>
+                    <ConfirmAkhir
+                        selectedDate={selectedDate}
+                        customer={customer}
+                        cats={catFormData ?? formList}
+                        jastip={ringkasanJastip}
+                    />
+                    <div className="px-6 pb-44">
+                        <button
+                            onClick={() => setPage(5)}
+                            className="bg-green-800 rounded-[20px] h-[50] hover:bg-green-900"
+                        >
+                            Previous
+                        </button>
+                    </div>
+                </>
             )}
         </div>
     )

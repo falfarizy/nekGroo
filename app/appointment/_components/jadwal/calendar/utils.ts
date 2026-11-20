@@ -128,3 +128,12 @@ export function getBookedCount(year: number, month: number, day: number): number
     const seed = (year + month) * 31 + day
     return seed % (MAX_SLOT_PER_DAY + 1)
 }
+
+// Sisa slot yang masih bisa dipesan pada tanggal tertentu (ISO YYYY-MM-DD).
+export function getAvailableSlots(iso: string): number {
+    const date = new Date(`${iso}T00:00:00`)
+    if (Number.isNaN(date.getTime())) return 0
+
+    const booked = getBookedCount(date.getFullYear(), date.getMonth(), date.getDate())
+    return Math.max(0, MAX_SLOT_PER_DAY - booked)
+}
